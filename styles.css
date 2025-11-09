@@ -1,0 +1,284 @@
+/* ===== Base Reset ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: #0b0b0f; /* black base */
+  color: #f0f0f5;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+/* header {
+  position: relative;
+  background: linear-gradient(
+                135deg, 
+                rgba(110,0,255,0.8), 
+                rgba(200,0,80,0.85)
+              ),
+            url('path/to/vnit-main-building.jpg') center/cover no-repeat;
+  color: #fff;
+  text-align: center;
+  padding: 2rem 1rem;
+  box-shadow: 0 2px 10px rgba(255,0,100,0.25);
+}
+
+
+header h1 {
+  font-size: 2rem;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px rgba(255,0,150,0.7);
+  font-weight: 600;
+} */
+
+header h1 {
+    font-family: 'Orbitron', 'Poppins', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #e50914;
+    text-shadow: 0 0 8px rgba(229, 9, 20, 0.8), 0 0 15px rgba(156, 39, 176, 0.6);
+    background: linear-gradient(90deg, #ff1744, #9c27b0, #3d3d3d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  header {
+    padding: 10px 0;
+    background: rgba(20, 20, 20, 0.7);
+    border-bottom: 2px solid #9c27b0;
+  }
+
+/* ===== Logout Button ===== */
+header .logout-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  background-color: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+header .logout-btn:hover {
+  background-color: rgba(255,0,100,0.6);
+  transform: scale(1.05);
+}
+
+/* ===== Footer ===== */
+footer {
+  background: linear-gradient(135deg, #2a003e, #4b001b);
+  color: #ddd;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  margin-top: auto;
+}
+
+/* ===== Main ===== */
+main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1000px;
+  margin: auto;
+}
+
+/* ===== Navigation ===== */
+.nav {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.nav a {
+  text-decoration: none;
+  color: #bb86fc;
+  font-weight: 600;
+  border: 1px solid #bb86fc;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.nav a:hover {
+  background-color: #bb86fc;
+  color: #0b0b0f;
+  box-shadow: 0 0 10px #bb86fc;
+}
+
+/* ===== Cards ===== */
+.card {
+  background: #161620;
+  padding: 1.3rem 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 0 15px rgba(187,134,252,0.15);
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255,0,80,0.15);
+  animation: fadeInUp 0.6s ease both;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Forms ===== */
+label {
+  display: block;
+  font-weight: 600;
+  margin-top: 0.8rem;
+  color: #bb86fc;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 0.7rem;
+  margin-top: 0.3rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #1b1b27;
+  color: #f5f5f5;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #ff0040;
+  box-shadow: 0 0 6px rgba(255,0,80,0.5);
+  outline: none;
+}
+
+/* ===== Buttons ===== */
+button {
+  background: linear-gradient(135deg, #7b2ff7, #f107a3);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.3rem;
+  margin-top: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(255,0,100,0.4);
+}
+
+button.secondary {
+  background: #2c2c38;
+  color: #f5f5f5;
+  border: 1px solid #444;
+}
+
+button.secondary:hover {
+  background: #3a3a4d;
+  box-shadow: 0 0 10px rgba(255,0,80,0.2);
+}
+
+/* ===== Tables ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  background-color: #18181f;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th, td {
+  border: 1px solid #2a2a35;
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+}
+
+th {
+  background: linear-gradient(135deg, #5a189a, #9d174d);
+  color: #fff;
+}
+
+tr:nth-child(even) {
+  background-color: #1f1f2b;
+}
+
+tr:hover {
+  background-color: #2a2a3d;
+  transition: 0.2s;
+}
+
+/* ===== Status Badges ===== */
+.badge {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.badge.pending {
+  background-color: #ffd1661a;
+  color: #ffb84d;
+  border: 1px solid #ffb84d44;
+}
+
+.badge.progress {
+  background-color: #7b2ff71a;
+  color: #bb86fc;
+  border: 1px solid #bb86fc44;
+}
+
+.badge.resolved {
+  background-color: #06d6a01a;
+  color: #06d6a0;
+  border: 1px solid #06d6a044;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  main {
+    padding: 1rem;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+  }
+
+  .nav {
+    justify-content: center;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  table, th, td {
+    font-size: 0.9rem;
+  }
+}

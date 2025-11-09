@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Student Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Student Dashboard</h1>
+  <a href="#" id="logout" class="logout-btn">Logout</a>
+</header>
+<main>
+
+  <section>
+    <h2>File a new complaint</h2>
+    <label>Issue description</label>
+    <textarea id="issue" placeholder="Describe your problem (e.g., water leakage in bathroom)"></textarea>
+    <button id="fileBtn">Submit complaint</button>
+    <p id="msg"></p>
+  </section>
+
+  <section>
+    <h2>My complaints</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Issue</th><th>Status</th><th>Assigned To</th><th>Resolved</th><th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody id="list">
+          <!-- Sample Data -->
+          <tr>
+            <td>AB1234</td>
+            <td>Water leakage in bathroom</td>
+            <td><span class="badge pending">Pending</span></td>
+            <td>None</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>CD5678</td>
+            <td>Broken ceiling fan in room G-10</td>
+            <td><span class="badge progress">In Progress</span></td>
+            <td>Ramesh (Electrician)</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>EF9012</td>
+            <td>Mess food quality issue</td>
+            <td><span class="badge resolved">Resolved</span></td>
+            <td>Anurag (Mess Supervisor)</td>
+            <td>2025-11-05 11:00 AM</td>
+          </tr>
+        </tbody>
+    </table>
+  </section>
+</main>
+<footer>© VNIT Hostel Grievance Prototype</footer>
+
+<script type="module">
+  import { auth, db, collection, doc, getDoc, getDocs, addDoc, query, where, orderBy, serverTimestamp } from './firebase-init.js';
+
+  let currentUser = null;
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) return location.href = 'index.html';
+    currentUser = user;
+    loadMyComplaints();
+  });
+
+  document.getElementById('logout').onclick = () => auth.signOut();
+
+  async function fileComplaint() {
+    const issue = document.getElementById('issue').value.trim();
+    const msg = document.getElementById('msg');
+    if (!issue) { msg.textContent = 'Please enter an issue.'; return; }
+
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    const studentName = userDocSnap.exists() ? (userDocSnap.data().name || userDocSnap.data().email) : currentUser.email;
+
+    await addDoc(collection(db, 'complaints'), {
+      studentUid: currentUser.uid,
+      studentName,
+      issue,
+      status: 'Pending',
+      assignedToUid: null,
+      assignedToName: 'None',
+      createdAt: serverTimestamp()
+    });
+    msg.textContent = 'Complaint submitted.';
+    document.getElementById('issue').value = '';
+    loadMyComplaints();
+  }
+
+  document.getElementById('fileBtn').onclick = fileComplaint;
+
+  async function loadMyComplaints() {
+    const tbody = document.getElementById('list');
+    tbody.innerHTML = '';
+    const complaintsQuery = query(
+      collection(db, 'complaints'),
+      where('studentUid', '==', currentUser.uid),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(complaintsQuery);
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const id = docSnap.id.substring(0,6);
+      const statusClass = d.status === 'Pending' ? 'pending' :
+                          d.status === 'In Progress' ? 'progress' : 'resolved';
+      const created = d.createdAt ? d.createdAt.toDate().toLocaleString() : '-';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${id}</td>
+        <td>${d.issue}</td>
+        <td><span class="badge ${statusClass}">${d.status}</span></td>
+        <td>${d.assignedToName || 'None'}</td>
+        <td>${created}</td>
+        <td>${d.remarks || '-'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+</script>
+</body>
+</html>

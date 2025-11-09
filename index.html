@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Hostel Grievance System - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><h1>Hostel Grievance System</h1></header>
+  <main>
+    <h2>Login</h2>
+    <div class="row">
+      <div class="card">
+        <label>Email</label>
+        <input id="email" type="email" placeholder="user@student.com">
+        <label>Password</label>
+        <input id="password" type="password" placeholder="">
+        <button id="loginBtn">Login</button>
+        <button id="signupBtn" class="secondary">Sign up</button>
+        <p id="status"></p>
+      </div>
+      <div class="card">
+        <p><strong>Tip:</strong> Create accounts for student/admin/worker via signup, then set roles manually in Firestore’s <code>users</code> collection.</p>
+        <p>Demo flow:</p>
+        <ul>
+          <li><strong>Student:</strong> File a complaint, view status</li>
+          <li><strong>Admin:</strong> Assign to worker, update status</li>
+          <li><strong>Worker:</strong> View assigned complaints, mark resolved</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+  <footer>© VNIT Hostel Grievance Prototype</footer>
+
+  <!-- Firebase initialization -->
+  <script type="module">
+    import { auth, db } from './firebase-init.js';
+    import {
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import {
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+    const emailInput = document.getElementById('email');
+    const passInput = document.getElementById('password');
+    const statusEl = document.getElementById('status');
+
+    // Ensure user document exists
+    async function ensureUserDoc(uid, email) {
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          email,
+          role: 'student',
+          createdAt: new Date()
+        });
+      }
+    }
+
+    // Signup
+    document.getElementById('signupBtn').onclick = async () => {
+      const email = emailInput.value.trim();
+      const pass = passInput.value.trim();
+      if (!email || !pass) {
+        statusEl.textContent = 'Please enter email and password.';
+        return;
+      }
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+        await ensureUserDoc(userCred.user.uid, email);
+        statusEl.textContent = 'Signup successful. Default role: student.';
+      } catch (e) {
+        statusEl.textContent = 'Signup error: ' + e.message;
+      }
+    };
+
+    // Login
+    document.getElementById('loginBtn').onclick = async () => {
+      const email = emailInput.value.trim();
+      const pass = passInput.value.trim();
+      if (!email || !pass) {
+        statusEl.textContent = 'Please enter email and password.';
+        return;
+      }
+      try {
+        const userCred = await signInWithEmailAndPassword(auth, email, pass);
+        const user = userCred.user;
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const role = userDoc.exists() ? userDoc.data().role : 'student';
+
+        statusEl.textContent = 'Login successful. Role: ' + role;
+
+        if (role === 'admin') location.href = 'admin.html';
+        else if (role === 'worker') location.href = 'worker.html';
+        else location.href = 'student.html';
+
+      } catch (e) {
+        statusEl.textContent = 'Login error: ' + e.message;
+      }
+    };
+  </script>
+  <script type="module">
+  import { auth, db } from './firebase-init.js';
+
+  // Example usage:
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      console.log("Logged in:", user.email);
+    } else {
+      console.log("Not logged in");
+    }
+  });
+</script>
+
+</body>
+</html>

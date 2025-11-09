@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Worker Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Worker Dashboard</h1>
+  <a href="#" id="logout" class="logout-btn">Logout</a>
+</header>
+
+<main>
+
+  <section>
+    <h2>Assigned complaints</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Hostel</th><th>Room No</th><th>Issue</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="assigned">
+        <!-- ✅ Static sample data -->
+        <tr>
+          <td>AB1234</td>
+          <td>Hostel C</td>
+          <td>G-10</td>
+          <td>Water leakage in bathroom</td>
+          <td><span class="badge pending">Pending</span></td>
+          <td><button>Mark Resolved</button></td>
+        </tr>
+        <tr>
+          <td>CD5678</td>
+          <td>Hostel D</td>
+          <td>F-02</td>
+          <td>Broken ceiling fan</td>
+          <td><span class="badge progress">In Progress</span></td>
+          <td><button>Mark Resolved</button></td>
+        </tr>
+        <tr>
+          <td>EF9012</td>
+          <td>Hostel A</td>
+          <td>S-05</td>
+          <td>Mess food quality issue</td>
+          <td><span class="badge resolved">Resolved</span></td>
+          <td><button disabled>Resolved</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+<footer>© VNIT Hostel Grievance Prototype</footer>
+
+<script type="module">
+  import { auth, db, collection, doc, getDoc, getDocs, updateDoc, query, where, orderBy } from './firebase-init.js';
+
+  let currentUser = null;
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) return location.href = 'index.html';
+    currentUser = user;
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    const userDoc = await getDoc(userDocRef);
+    if (!userDoc.exists() || userDoc.data().role !== 'worker') return location.href = 'index.html';
+    loadAssigned();
+  });
+
+  document.getElementById('logout').onclick = () => auth.signOut();
+
+  async function loadAssigned() {
+    const tbody = document.getElementById('assigned');
+    tbody.innerHTML = '';
+    const complaintsQuery = query(
+      collection(db, 'complaints'),
+      where('assignedToUid', '==', currentUser.uid),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(complaintsQuery);
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const idShort = docSnap.id.substring(0,6);
+      const statusClass = d.status === 'Pending' ? 'pending' :
+                          d.status === 'In Progress' ? 'progress' : 'resolved';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${idShort}</td>
+        <td>${d.hostel || '-'}</td>
+        <td>${d.roomNo || '-'}</td>
+        <td>${d.issue}</td>
+        <td><span class="badge ${statusClass}">${d.status}</span></td>
+        <td class="actions">
+          <button onclick="markResolved('${docSnap.id}')" ${d.status === 'Resolved' ? 'disabled' : ''}>${d.status === 'Resolved' ? 'Resolved' : 'Mark Resolved'}</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  window.markResolved = async function(id) {
+    const complaintRef = doc(db, 'complaints', id);
+    await updateDoc(complaintRef, { status: 'Resolved' });
+    loadAssigned();
+  };
+</script>
+</body>
+</html>

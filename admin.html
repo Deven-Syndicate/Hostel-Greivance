@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Admin Dashboard</h1>
+  <a href="#" id="logout" class="logout-btn">Logout</a>
+</header>
+
+<main>
+
+  <section class="row">
+    <div class="card">
+      <h2>All complaints</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Student Name</th><th>Enrollment Number</th><th>Issue</th><th>Status</th><th>Assigned</th><th>Actions</th><th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="complaints">
+          <!-- ✅ Static sample data -->
+          <tr>
+            <td>AB1234</td>
+            <td>Rohit Sharma</td>
+            <td>B22CS101</td>
+            <td>Water leakage in bathroom</td>
+            <td><span class="badge pending">Pending</span></td>
+            <td>None</td>
+            <td>
+              <button>Pending</button>
+              <button class="secondary">In Progress</button>
+              <button class="secondary">Resolved</button>
+            </td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>CD5678</td>
+            <td>Neha Patel</td>
+            <td>B22EE045</td>
+            <td>Broken ceiling fan in room G-10</td>
+            <td><span class="badge progress">In Progress</span></td>
+            <td>Ramesh (Electrician)</td>
+            <td>
+              <button>Pending</button>
+              <button class="secondary">In Progress</button>
+              <button class="secondary">Resolved</button>
+            </td>
+            <td>Parts ordered</td>
+          </tr>
+          <tr>
+            <td>EF9012</td>
+            <td>Ankit Verma</td>
+            <td>B22ME078</td>
+            <td>Mess food quality issue</td>
+            <td><span class="badge resolved">Resolved</span></td>
+            <td>Anurag (Mess Supervisor)</td>
+            <td>
+              <button>Pending</button>
+              <button class="secondary">In Progress</button>
+              <button class="secondary">Resolved</button>
+            </td>
+            <td>Complaint verified and resolved</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- <div class="card">
+      <h2>Workers</h2>
+      <p>Pick a worker account to assign complaints.</p>
+      <select id="workerSelect"></select>
+    </div> -->
+  </section>
+</main>
+<footer>© VNIT Hostel Grievance Prototype</footer>
+
+<script type="module">
+  import { auth, db, collection, doc, getDoc, getDocs, updateDoc, query, where, orderBy } from './firebase-init.js';
+
+  let currentUser = null;
+  let workers = [];
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) return location.href = 'index.html';
+    currentUser = user;
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    const userDoc = await getDoc(userDocRef);
+    if (!userDoc.exists() || userDoc.data().role !== 'admin') return location.href = 'index.html';
+    await loadWorkers();
+    await loadComplaints();
+  });
+
+  document.getElementById('logout').onclick = () => auth.signOut();
+
+  async function loadWorkers() {
+    const workersQuery = query(collection(db, 'users'), where('role', '==', 'worker'));
+    const snap = await getDocs(workersQuery);
+    const select = document.getElementById('workerSelect');
+    if (select) {
+      select.innerHTML = '';
+      workers = [];
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        workers.push({ uid: docSnap.id, name: data.name || data.email || 'Worker' });
+        const opt = document.createElement('option');
+        opt.value = docSnap.id;
+        opt.textContent = data.name || data.email;
+        select.appendChild(opt);
+      });
+    }
+  }
+
+  async function loadComplaints() {
+    const tbody = document.getElementById('complaints');
+    tbody.innerHTML = '';
+    const complaintsQuery = query(collection(db, 'complaints'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(complaintsQuery);
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const idShort = docSnap.id.substring(0,6);
+      const statusClass = d.status === 'Pending' ? 'pending' :
+                          d.status === 'In Progress' ? 'progress' : 'resolved';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${idShort}</td>
+        <td>${d.studentName || '-'}</td>
+        <td>${d.enrollmentNumber || '-'}</td>
+        <td>${d.issue}</td>
+        <td><span class="badge ${statusClass}">${d.status}</span></td>
+        <td>${d.assignedToName || 'None'}</td>
+        <td class="actions">
+          <button onclick="assignWorker('${docSnap.id}')">Assign</button>
+          <button onclick="setStatus('${docSnap.id}','Pending')" class="secondary">Pending</button>
+          <button onclick="setStatus('${docSnap.id}','In Progress')" class="secondary">In Progress</button>
+          <button onclick="setStatus('${docSnap.id}','Resolved')" class="secondary">Resolved</button>
+        </td>
+        <td>${d.remarks || '-'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  window.assignWorker = async function(complaintId) {
+    const workerSelect = document.getElementById('workerSelect');
+    if (!workerSelect) return alert('Worker selection not available');
+    const workerUid = workerSelect.value;
+    const selected = workers.find(w => w.uid === workerUid);
+    if (!selected) return alert('Select a worker first');
+    const complaintRef = doc(db, 'complaints', complaintId);
+    await updateDoc(complaintRef, {
+      assignedToUid: workerUid,
+      assignedToName: selected.name,
+      status: 'In Progress'
+    });
+    await loadComplaints();
+  };
+
+  window.setStatus = async function(complaintId, status) {
+    const complaintRef = doc(db, 'complaints', complaintId);
+    await updateDoc(complaintRef, { status });
+    await loadComplaints();
+  };
+</script>
+</body>
+</html>
